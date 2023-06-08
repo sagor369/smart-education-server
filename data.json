@@ -1,0 +1,52 @@
+[
+    {
+      "className": "Introduction to English",
+      "image": "https://i.ibb.co/gdcfsGv/banner1.jpg",
+      "instructorName": "John Smith",
+      "email": "john.smith@example.com",
+      "availableSeats": 20,
+      "price": 99.99,
+      "classType": "Online",
+      "description": "Learn the basics of programming and get hands-on experience with popular programming languages."
+    },
+    {
+      "className": "Basice Fundamentals",
+      "image": "https://i.ibb.co/kgvbQDf/banner5.jpg",
+      "instructorName": "Emily Johnson",
+      "email": "emily.johnson@example.com",
+      "availableSeats": 15,
+      "price": 149.99,
+      "classType": "In-person",
+      "description": "Master the art of photography, including composition, lighting, and editing techniques."
+    },
+    {
+      "className": "Introduction to Psychology",
+      "image": "https://i.ibb.co/vXW39xk/banner6.jpg",
+      "instructorName": "Sarah Thompson",
+      "email": "sarah.thompson@example.com",
+      "availableSeats": 30,
+      "price": 79.99,
+      "classType": "Online",
+      "description": "Explore the fascinating world of psychology and gain insights into human behavior and the mind."
+    },
+    {
+      "className": "Art History",
+      "image": "https://i.ibb.co/DG6L9f7/banner3.jpg",
+      "instructorName": "Michael Rodriguez",
+      "email": "michael.rodriguez@example.com",
+      "availableSeats": 25,
+      "price": 129.99,
+      "classType": "In-person",
+      "description": "Journey through the history of art and discover various art movements, styles, and iconic artists."
+    },
+    {
+      "className": "Introduction to Finance",
+      "image": "https://i.ibb.co/NF4Gydk/banner2.jpg",
+      "instructorName": "Jennifer Davis",
+      "email": "jennifer.davis@example.com",
+      "availableSeats": 20,
+      "price": 89.99,
+      "classType": "Online",
+      "description": "Learn the fundamental principles of finance and develop a solid understanding of financial management."
+    }
+  ]
