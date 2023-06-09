@@ -25,14 +25,19 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
 
-    const populerClass = client.db("smartDb").databaseName.collection(populer);
+    const populerCalection = client.db("smartDb").collection("populer");
+    const userCallection = client.db("smartDb").collection("user");
 
 
     await client.connect();
 
-    app,get('populer', async(req, les)=?{
- 
+    app.get('/populer', async(req, res)=>{
+
+      const result = await populerCalection.find().toArray()
+      res.send(result)
     })
+
+  
 
 
 
