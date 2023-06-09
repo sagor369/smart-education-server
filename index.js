@@ -37,7 +37,12 @@ async function run() {
       res.send(result)
     })
 
-  
+    app.get('/users', async(req, res)=>{
+      const instructor = req.query.instructor
+      const query = {role: instructor}
+      const result = await userCallection.find(query).toArray()
+      res.send(result)
+    })
 
 
 
