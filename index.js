@@ -1,6 +1,7 @@
 const express = require('express')
 const { MongoClient, ServerApiVersion } = require('mongodb');
 const app = express()
+const jwt = require('jsonwebtoken');
 require('dotenv').config()
 const cors = require('cors')
 const port = process.env.PORT || 5000
@@ -15,7 +16,7 @@ const verifyjwt = (req, res, next)=>{
     return res.status(401).send({error:true, message: 'unauthorized access'})
   }
   const token = authorization.split(' ')[1]
-  jwt.varifyToken(token, process.env.SECRET_TOKEN,(error, decoded)=>{
+  jwt.verify(token, process.env.SECRET_TOKEN,(error, decoded)=>{
     if(error){
       return res.status(401).send({error:true, message: 'unauthorized access'})
     }
@@ -42,9 +43,45 @@ async function run() {
 
     const classCalection = client.db("smartDb").collection("populer");
     const userCallection = client.db("smartDb").collection("user");
+    const addClassCallection = client.db("smartDb").collection("addClass");
 
 
     await client.connect();
+
+    app.post('/jwt', (req,res)=>{
+      const user = req.body 
+      const token = jwt.sign(user, process.env.SECRET_TOKEN, { expiresIn: '3h' })
+      res.send(token)
+    })
+
+    app.patch('/add-class', verifyjwt , async(req, res)=>{
+      const email = req.decoded.email
+      const data = req.body
+      const {className, description ,image, instructorName,price, seats}= data
+      const items={
+        className : className, 
+        description: description ,
+        image: image, 
+        instructorName: instructorName,
+        price: price ,
+        seats: seats,
+        email: email
+
+      }
+      const result = await addClassCallection.insertOne(items)
+      res.send(result)
+    })
+
+    app.get('/my-class', verifyjwt , async(req, res)=>{
+      const email = req.decoded.email
+      const query = {
+        email: email
+      }
+      const result = await addClassCallection.find(query).toArray()
+      console.log(email)
+      res.send(result)
+
+    })
 
     app.get('/populer', async(req, res)=>{
 
@@ -60,11 +97,23 @@ async function run() {
 
     })
 
-    app.get('/users', verifyjwt,  async(req, res)=>{
+    app.get('/users',  async(req, res)=>{
       const instructor = req.query.instructor
       const query = {role: instructor}
       const result = await userCallection.find(query).toArray()
       res.send(result)
+    })
+
+
+    app.post('/users', async(req, res)=>{
+      const data = req.body 
+      const {email, name, photo} = data
+      const query =  {
+        email, name, photo
+
+      }
+      const result = await userCallection.insertOne(query)
+      res.send (result)
     })
 
 
