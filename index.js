@@ -25,7 +25,7 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
 
-    const populerCalection = client.db("smartDb").collection("populer");
+    const classCalection = client.db("smartDb").collection("populer");
     const userCallection = client.db("smartDb").collection("user");
 
 
@@ -33,8 +33,16 @@ async function run() {
 
     app.get('/populer', async(req, res)=>{
 
-      const result = await populerCalection.find().toArray()
+      const result = await classCalection.find().toArray()
       res.send(result)
+    })
+
+    app.get('/instructor-class', async(req, res) =>{
+      const email = req.body 
+      const findClass = {email: email}
+      const result = await classCalection.find(findClass).toArray()
+      res.send(result)
+
     })
 
     app.get('/users', async(req, res)=>{
