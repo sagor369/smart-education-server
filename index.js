@@ -9,6 +9,21 @@ const port = process.env.PORT || 5000
 app.use(cors())
 app.use(express.json())
 
+const verifyjwt = (req, res, next)=>{
+  const authorization = req.headers.authorization
+  if(!authorization){
+    return res.status(401).send({error:true, message: 'unauthorized access'})
+  }
+  const token = authorization.split(' ')[1]
+  jwt.varifyToken(token, process.env.SECRET_TOKEN,(error, decoded)=>{
+    if(error){
+      return res.status(401).send({error:true, message: 'unauthorized access'})
+    }
+    req.decoded = decoded
+    next()
+  })
+}
+
 
 
 const uri = `mongodb+srv://${process.env.MD_User}:${process.env.MD_Pass}@cluster0.nsogw9w.mongodb.net/?retryWrites=true&w=majority`;
@@ -37,7 +52,7 @@ async function run() {
       res.send(result)
     })
 
-    app.get('/instructor-class', async(req, res) =>{
+    app.get('/instructor-class', verifyjwt,  async(req, res) =>{
       const email = req.body 
       const findClass = {email: email}
       const result = await classCalection.find(findClass).toArray()
@@ -45,7 +60,7 @@ async function run() {
 
     })
 
-    app.get('/users', async(req, res)=>{
+    app.get('/users', verifyjwt,  async(req, res)=>{
       const instructor = req.query.instructor
       const query = {role: instructor}
       const result = await userCallection.find(query).toArray()
