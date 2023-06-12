@@ -64,9 +64,12 @@ async function run() {
     })
 
     app.patch('/add-class', verifyjwt , async(req, res)=>{
-      const email = req.decoded.email
+      const decodedemail = req.decoded.email
       const data = req.body
-      const {className, description ,image, instructorName,price, seats}= data
+      const {className, description,email ,image, instructorName,price, seats}= data
+      if(decodedemail !== email){
+        res.seats(401).send({message:'unauthoraiz access '})
+      }
       const items={
         className : className, 
         description: description ,
@@ -126,26 +129,29 @@ async function run() {
 
       const email = req.params.email 
       const decodedEmail = req.decoded.email 
-      console.log(email)
       if(decodedEmail !== email ){
         res.send({user: false})
       }
 
       const query = { email: email }
       const user = await userCallection.findOne(query);
-      if(user?.role == 'admin'){
-        res.send({admin: true})
+      if(user?.role === 'admin'){
+        res.send({admin: true,instructor:false, user:false})
       }
-      else if(user?.role == 'isntructor'){
-        res.send({instructor: true})
+      else if(user?.role === 'isntructor'){
+        res.send({admin: false,instructor:true, user:false})
+      }
+      else{
+        res.send({admin: false,instructor:false,user: true})
+
       }
 
-      res.send({user: true})
     })
 
 
     app.post('/users', async(req, res)=>{
       const data = req.body 
+      console.log(data)
       const {email, name, photo} = data
       const query =  {
         email, name, photo, role: 'student'
