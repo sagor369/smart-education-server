@@ -1,5 +1,5 @@
 const express = require('express')
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const app = express()
 const jwt = require('jsonwebtoken');
 require('dotenv').config()
@@ -48,6 +48,15 @@ async function run() {
 
     await client.connect();
 
+    // const isAdmin = async(req, res, next)=>{
+    //   const email = req.decoded.email
+    //   const query = {
+    //     email: email
+    //   }
+    //   const result = 
+
+    // }
+
     app.post('/jwt', (req,res)=>{
       const user = req.body 
       const token = jwt.sign(user, process.env.SECRET_TOKEN, { expiresIn: '3h' })
@@ -78,8 +87,16 @@ async function run() {
         email: email
       }
       const result = await addClassCallection.find(query).toArray()
-      console.log(email)
       res.send(result)
+
+    })
+
+    app.delete('/delete-class/:id', async(req, res)=>{
+      const id = req.params.id
+      const query = {_id: new ObjectId(id)}
+      const result = await addClassCallection.deleteOne(query)
+      res.send(result)
+
 
     })
 
@@ -105,25 +122,47 @@ async function run() {
     })
 
 
+    app.get('/user/data/:email', verifyjwt,  async(req, res)=>{
+
+      const email = req.params.email 
+      const decodedEmail = req.decoded.email 
+      console.log(email)
+      if(decodedEmail !== email ){
+        res.send({user: false})
+      }
+
+      const query = { email: email }
+      const user = await userCallection.findOne(query);
+      if(user?.role == 'admin'){
+        res.send({admin: true})
+      }
+      else if(user?.role == 'isntructor'){
+        res.send({instructor: true})
+      }
+
+      res.send({user: true})
+    })
+
+
     app.post('/users', async(req, res)=>{
       const data = req.body 
       const {email, name, photo} = data
       const query =  {
-        email, name, photo
+        email, name, photo, role: 'student'
 
       }
+      const queryEmail = {
+        email: email
+      }
+      const mutchUser = await userCallection.findOne(queryEmail)
+
+      if(mutchUser){
+        res.send({message: 'user already added'})
+      }
+
       const result = await userCallection.insertOne(query)
       res.send (result)
     })
-
-
-
-
-
-
-
-
-
 
 
     await client.db("admin").command({ ping: 1 });
