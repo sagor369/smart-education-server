@@ -110,6 +110,19 @@ async function run() {
       res.send(result)
 
     })
+    app.get('/enroll/:email', verifyjwt, async(req, res)=>{
+      const email = req.params.email
+      const decodedEmail = req.decoded.email 
+      console.log(email)
+      const query = {
+        email: email,
+        classPosition :'enroll'
+      }
+      if(decodedEmail===email){
+        const result = await addClassCallection.find(query).toArray()
+      res.send(result)
+      }
+    })
 
     app.delete('/delete-class/:id', async(req, res)=>{
       const id = req.params.id
@@ -190,7 +203,6 @@ async function run() {
     app.post('/payment-intent', async (req, res)=>{
       const {price} = req.body 
       const amount = parseInt(price*100);
-      console.log(amount)
       const intent = await stripe.paymentIntents.create({
         amount: amount,
         currency: 'usd',
@@ -205,6 +217,18 @@ async function run() {
       const data = req.body 
       const result = await paymentCallection.insertOne(data)
       res.send(result)
+
+    })
+    app.get('/payments/:email', verifyjwt, async(req, res)=>{
+      const email = req.params.email
+      const decodedEmail = req.decoded.email
+      const query = {
+        email: email
+      }
+      if(email === decodedEmail){
+        const result = await paymentCallection.find(query).toArray()
+        res.send(result)
+      }
 
     })
 
