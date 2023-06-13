@@ -67,12 +67,12 @@ async function run() {
       res.send(token)
     })
 
-    app.patch('/add-class', verifyjwt , async(req, res)=>{
+    app.post('/add-class', verifyjwt , async(req, res)=>{
       const decodedemail = req.decoded.email
       const data = req.body
       const {className, description,email ,image, instructorName,price, seats}= data
       if(decodedemail !== email){
-        res.seats(401).send({message:'unauthoraiz access '})
+        res.status(401).send({message:'unauthoraiz access '})
       }
       const items={
         className : className, 
@@ -81,7 +81,8 @@ async function run() {
         instructorName: instructorName,
         price: price ,
         seats: seats,
-        email: email
+        email: email,
+        classPosition :'select'
 
       }
       const result = await addClassCallection.insertOne(items)
@@ -91,9 +92,21 @@ async function run() {
     app.get('/my-class', verifyjwt , async(req, res)=>{
       const email = req.decoded.email
       const query = {
-        email: email
+        email: email,
+        classPosition :'select'
       }
       const result = await addClassCallection.find(query).toArray()
+      res.send(result)
+
+    })
+    app.patch('/enroll-class/:id', verifyjwt , async(req, res)=>{
+      const id = req.params.id
+      const filter = {_id : new ObjectId(id)}
+      const query = {$set:{
+        classPosition :'enroll'
+      }
+      }
+      const result = await addClassCallection.updateOne(filter, query)
       res.send(result)
 
     })
@@ -176,7 +189,8 @@ async function run() {
 
     app.post('/payment-intent', async (req, res)=>{
       const {price} = req.body 
-      const amount = price*100;
+      const amount = parseInt(price*100);
+      console.log(amount)
       const intent = await stripe.paymentIntents.create({
         amount: amount,
         currency: 'usd',
