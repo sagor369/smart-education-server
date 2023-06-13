@@ -3,7 +3,9 @@ const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const app = express()
 const jwt = require('jsonwebtoken');
 require('dotenv').config()
-const cors = require('cors')
+const cors = require('cors');
+const { default: Stripe } = require('stripe');
+const stripe = require('stripe')(process.env.PAYMENT_KEY)
 const port = process.env.PORT || 5000
 
 
@@ -44,6 +46,7 @@ async function run() {
     const classCalection = client.db("smartDb").collection("populer");
     const userCallection = client.db("smartDb").collection("user");
     const addClassCallection = client.db("smartDb").collection("addClass");
+    const paymentCallection = client.db("smartDb").collection("payment");
 
 
     await client.connect();
@@ -56,6 +59,7 @@ async function run() {
     //   const result = 
 
     // }
+
 
     app.post('/jwt', (req,res)=>{
       const user = req.body 
@@ -168,6 +172,26 @@ async function run() {
 
       const result = await userCallection.insertOne(query)
       res.send (result)
+    })
+
+    app.post('/payment-intent', async (req, res)=>{
+      const {price} = req.body 
+      const amount = price*100;
+      const intent = await stripe.paymentIntents.create({
+        amount: amount,
+        currency: 'usd',
+        payment_method_types: ['card']
+      })
+      res.send({
+        clientSecret: intent.client_secret,
+      })
+    })
+
+    app.post('/payments', verifyjwt, async(req, res)=>{
+      const data = req.body 
+      const result = await paymentCallection.insertOne(data)
+      res.send(result)
+
     })
 
 
