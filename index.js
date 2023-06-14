@@ -64,7 +64,7 @@ async function run() {
     app.post('/jwt', (req,res)=>{
       const user = req.body 
       const token = jwt.sign(user, process.env.SECRET_TOKEN, { expiresIn: '3h' })
-      res.send(token)
+    res.send({token})
     })
 // user dashboard start 
     app.post('/add-class', verifyjwt , async(req, res)=>{
@@ -141,8 +141,8 @@ async function run() {
       res.send(result)
     })
 
-    app.get('/instructor-class', verifyjwt,  async(req, res) =>{
-      const email = req.body 
+    app.get('/instructor-class/:email',verifyjwt,  async(req, res) =>{
+      const  email= req.params.email
       const findClass = {email: email}
       const result = await classCalection.find(findClass).toArray()
       res.send(result)
@@ -153,7 +153,6 @@ async function run() {
       const name = req.params.name
       const findClass = {className: name}
       const updateClass = await classCalection.findOne(findClass)
-      console.log(updateClass)
       if(updateClass){
         const query = {
           $set:{
@@ -164,6 +163,13 @@ async function run() {
         res.send (result)
       }
 
+    })
+
+    app.delete('/delete-class/:id' , verifyjwt, async(req, res)=>{
+      const id = req.params.id 
+      const findClass = {_id: new ObjectId(id)}
+      const result = await classCalection.deleteOne(findClass)
+      res.send(result)
     })
 
     // all classes end 
@@ -177,7 +183,7 @@ async function run() {
       res.send(result)
     })
 
-    app.get('/user/data/:email', verifyjwt,  async(req, res)=>{
+    app.get('/user-data/:email', verifyjwt,  async(req, res)=>{
 
       const email = req.params.email 
       const decodedEmail = req.decoded.email 
@@ -203,7 +209,6 @@ async function run() {
 
     app.post('/add-users', async(req, res)=>{
       const data = req.body 
-      console.log(data)
       const {email, name, photo} = data
       const query =  {
         email, name, photo, role: 'student'
