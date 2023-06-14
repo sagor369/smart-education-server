@@ -141,11 +141,55 @@ async function run() {
       res.send(result)
     })
 
+    app.get('/instructor-update-class/:id',verifyjwt,  async(req, res) =>{
+      const  id= req.params.id
+      console.log(id)
+      const findClass = {_id: new ObjectId(id)}
+      const result = await classCalection.findOne(findClass)
+      res.send(result)
+
+    })
     app.get('/instructor-class/:email',verifyjwt,  async(req, res) =>{
       const  email= req.params.email
       const findClass = {email: email}
       const result = await classCalection.find(findClass).toArray()
       res.send(result)
+
+    })
+
+    
+
+    app.patch('/modify-instructor-class/:id', async(req,res)=>{
+      const id = req.params.id
+      const {data} = req.body
+      const findClass = {_id : new ObjectId(id)}
+      const updateClass = await classCalection.findOne(findClass)
+      const {email, className, seats, price, instructorName, status} = data
+      console.log(data)
+      // if(updateClass){
+      //   const query = {
+      //     $set:{
+      //       seats: updateClass.seats -1
+      //     } 
+      //   }
+      //   const result  = await classCalection.updateOne(findClass, query)
+      //   res.send (result)
+      // }
+
+    })
+    app.patch('/update-instructor-class/:id', async(req,res)=>{
+      const id = req.params.id
+      const findClass = {_id : new ObjectId(id)}
+      const updateClass = await classCalection.findOne(findClass)
+      if(updateClass){
+        const query = {
+          $set:{
+            seats: updateClass.seats -1
+          } 
+        }
+        const result  = await classCalection.updateOne(findClass, query)
+        res.send (result)
+      }
 
     })
 
