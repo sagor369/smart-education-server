@@ -66,7 +66,7 @@ async function run() {
       const token = jwt.sign(user, process.env.SECRET_TOKEN, { expiresIn: '3h' })
       res.send(token)
     })
-
+// user dashboard start 
     app.post('/add-class', verifyjwt , async(req, res)=>{
       const decodedemail = req.decoded.email
       const data = req.body
@@ -129,9 +129,11 @@ async function run() {
       const query = {_id: new ObjectId(id)}
       const result = await addClassCallection.deleteOne(query)
       res.send(result)
-
-
     })
+
+    // user dashboard end 
+
+    // all classes start 
 
     app.get('/populer', async(req, res)=>{
 
@@ -147,13 +149,33 @@ async function run() {
 
     })
 
+    app.patch('/update-class/:name', async(req,res)=>{
+      const name = req.params.name
+      const findClass = {className: name}
+      const updateClass = await classCalection.findOne(findClass)
+      console.log(updateClass)
+      if(updateClass){
+        const query = {
+          $set:{
+            seats: updateClass.seats -1
+          } 
+        }
+        const result  = await classCalection.updateOne(findClass, query)
+        res.send (result)
+      }
+
+    })
+
+    // all classes end 
+
+    // user section start 
+
     app.get('/users',  async(req, res)=>{
       const instructor = req.query.instructor
       const query = {role: instructor}
       const result = await userCallection.find(query).toArray()
       res.send(result)
     })
-
 
     app.get('/user/data/:email', verifyjwt,  async(req, res)=>{
 
@@ -179,7 +201,7 @@ async function run() {
     })
 
 
-    app.post('/users', async(req, res)=>{
+    app.post('/add-users', async(req, res)=>{
       const data = req.body 
       console.log(data)
       const {email, name, photo} = data
@@ -199,6 +221,10 @@ async function run() {
       const result = await userCallection.insertOne(query)
       res.send (result)
     })
+
+    // user section end 
+
+    // payment section start 
 
     app.post('/payment-intent', async (req, res)=>{
       const {price} = req.body 
@@ -231,6 +257,8 @@ async function run() {
       }
 
     })
+
+    // payment section end 
 
 
     await client.db("admin").command({ ping: 1 });
