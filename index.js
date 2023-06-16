@@ -4,7 +4,6 @@ const app = express()
 const jwt = require('jsonwebtoken');
 require('dotenv').config()
 const cors = require('cors');
-const { default: Stripe } = require('stripe');
 const stripe = require('stripe')(process.env.PAYMENT_KEY)
 const port = process.env.PORT || 5000
 
@@ -12,18 +11,23 @@ const port = process.env.PORT || 5000
 app.use(cors())
 app.use(express.json())
 
-const verifyjwt = (req, res, next)=>{
-  const authorization = req.headers.authorization
-  if(!authorization){
-    return res.status(401).send({error:true, message: 'unauthorized access'})
+
+// todo
+const verifyjwt =  (req, res, next) => {
+  const authorization = req.headers.authorization;
+  console.log(authorization)
+  if (!authorization) {
+    return res.status(401).send({ error: true, message: 'unauthorized access' });
   }
-  const token = authorization.split(' ')[1]
-  jwt.verify(token, process.env.SECRET_TOKEN,(error, decoded)=>{
-    if(error){
-      return res.status(401).send({error:true, message: 'unauthorized access'})
+  const token = authorization.split(' ')[1];
+  console.log(token)
+
+  jwt.verify(token, process.env.SECRET_TOKEN, (err, decoded) => {
+    if (err) {
+      return res.status(401).send({ error: true, message: 'unauthorized access' })
     }
-    req.decoded = decoded
-    next()
+    req.decoded = decoded;
+    next();
   })
 }
 
@@ -60,6 +64,32 @@ async function run() {
 
     // }
 
+    const isAdmin = async (req, res, next)=>{
+      const email = req.params.email
+      const query = {email: email}
+      const user = await userCallection.findOne(query)
+      if(user?.role === 'admin'){
+        res.send({admin:true})
+      }
+      else{
+       next()
+      }
+
+    }
+    const isInstructor = async (req, res, next)=>{
+      const email = req.params.email
+      const query = {email: email}
+      const user = await userCallection.findOne(query)
+      if(user?.role === 'instructor'){
+        res.send({instructor:true})
+      }
+      else{
+        next()
+      }
+
+    }
+    
+
 
     app.post('/jwt', (req,res)=>{
       const user = req.body 
@@ -67,39 +97,60 @@ async function run() {
     res.send({token})
     })
 // user dashboard start 
-    app.post('/add-class', verifyjwt , async(req, res)=>{
-      const decodedemail = req.decoded.email
+  
+// todo
+app.post('/add-class'  ,  async(req, res)=>{
+      // const decodedemail = req.decoded.email
       const data = req.body
       const {className, description,email ,image, instructorName,price, seats}= data
-      if(decodedemail !== email){
-        res.status(401).send({message:'unauthoraiz access '})
-      }
-      const items={
-        className : className, 
-        description: description ,
-        image: image, 
-        instructorName: instructorName,
-        price: price ,
-        seats: seats,
-        email: email,
-        classPosition :'select'
+      // if(decodedemail !== email){
+      //   res.status(401).send({message:'unauthoraiz access '})
+      // }
+      
 
+        const items={
+          className : className, 
+          description: description ,
+          image: image, 
+          instructorName: instructorName,
+          price: price ,
+          seats: seats,
+          email: email,
+          classPosition :'select'
+  
+        }
+        const result = await addClassCallection.insertOne(items)
+        res.send(result)
+      
+    })
+
+    app.get('/enroll-student/:name', async(req, res)=>{
+      const name = req.params.name
+      const myClass = {
+        instructorName: name,
       }
-      const result = await addClassCallection.insertOne(items)
+      const result = await addClassCallection.find(myClass).toArray()
       res.send(result)
     })
 
-    app.get('/my-class', verifyjwt , async(req, res)=>{
-      const email = req.decoded.email
+
+   
+    // todo
+    app.get('/my-class/:email',   async(req, res)=>{
+      // const email = req.decoded.email
+      const email = req.params.email
       const query = {
         email: email,
-        classPosition :'select'
+        classPosition :'select' 
       }
       const result = await addClassCallection.find(query).toArray()
       res.send(result)
 
     })
-    app.patch('/enroll-class/:id', verifyjwt , async(req, res)=>{
+
+    
+    // todo
+    app.patch('/enroll-class/:id' ,  async(req, res)=>{
       const id = req.params.id
       const filter = {_id : new ObjectId(id)}
       const query = {$set:{
@@ -110,21 +161,23 @@ async function run() {
       res.send(result)
 
     })
-    app.get('/enroll/:email', verifyjwt, async(req, res)=>{
+
+   
+    // todo
+    app.get('/enroll/:email',   async(req, res)=>{
       const email = req.params.email
-      const decodedEmail = req.decoded.email 
-      console.log(email)
+      // const decodedEmail = req.decoded.email 
       const query = {
         email: email,
         classPosition :'enroll'
       }
-      if(decodedEmail===email){
-        const result = await addClassCallection.find(query).toArray()
+      // if(decodedEmail===email){
+      // }
+      const result = await addClassCallection.find(query).toArray()
       res.send(result)
-      }
     })
 
-    app.delete('/delete-class/:id', async(req, res)=>{
+    app.delete('/delete-user-class/:id', async(req, res)=>{
       const id = req.params.id
       const query = {_id: new ObjectId(id)}
       const result = await addClassCallection.deleteOne(query)
@@ -141,15 +194,35 @@ async function run() {
       res.send(result)
     })
 
-    app.get('/instructor-update-class/:id',verifyjwt,  async(req, res) =>{
+    app.post('/new-class', async(req, res)=>{
+      const {body} = req.body 
+      const query = {
+        className: body.className,
+        image: body.photos,
+        instructorName: body.name, 
+        email:body.email,
+        price:body.price,
+        classType: 'painding',
+        description: 'body',
+        seats: body.seats
+      }
+      const result = await classCalection.insertOne(query)
+      res.send(result) 
+    })
+
+    
+    
+    // todo
+    app.get('/instructor-update-class/:id',  async(req, res) =>{
       const  id= req.params.id
-      console.log(id)
       const findClass = {_id: new ObjectId(id)}
       const result = await classCalection.findOne(findClass)
       res.send(result)
 
     })
-    app.get('/instructor-class/:email',verifyjwt,  async(req, res) =>{
+    
+    // todo
+    app.get('/instructor-class/:email', async(req, res) =>{
       const  email= req.params.email
       const findClass = {email: email}
       const result = await classCalection.find(findClass).toArray()
@@ -164,17 +237,21 @@ async function run() {
       const {data} = req.body
       const findClass = {_id : new ObjectId(id)}
       const updateClass = await classCalection.findOne(findClass)
-      const {email, className, seats, price, instructorName, status} = data
-      console.log(data)
-      // if(updateClass){
-      //   const query = {
-      //     $set:{
-      //       seats: updateClass.seats -1
-      //     } 
-      //   }
-      //   const result  = await classCalection.updateOne(findClass, query)
-      //   res.send (result)
-      // }
+      const { className, seats, price} = data
+
+      if(updateClass){
+        const query = {
+          $set:{
+            className:className,
+            seats: seats,
+            price: price,
+            status: 'prossasing'
+            
+          } 
+        }
+        const result  = await classCalection.updateOne(findClass, query)
+        res.send (result)
+      }
 
     })
     app.patch('/update-instructor-class/:id', async(req,res)=>{
@@ -209,7 +286,9 @@ async function run() {
 
     })
 
-    app.delete('/delete-class/:id' , verifyjwt, async(req, res)=>{
+    
+    // todo
+    app.delete('/delete-class/:id' ,  async(req, res)=>{
       const id = req.params.id 
       const findClass = {_id: new ObjectId(id)}
       const result = await classCalection.deleteOne(findClass)
@@ -227,25 +306,25 @@ async function run() {
       res.send(result)
     })
 
-    app.get('/user-data/:email', verifyjwt,  async(req, res)=>{
-
+   
+    app.get('/user-data/:email',isAdmin ,isInstructor ,  async(req, res)=>{
       const email = req.params.email 
-      const decodedEmail = req.decoded.email 
-      if(decodedEmail !== email ){
-        res.send({user: false})
-      }
+      // const decodedEmail = req.decoded.email 
+      // console.log(decodedEmail)
+      // if(email !== decodedEmail ){
+      //   res.status(401).send({user: false , error: true, message: 'unathoriz user'})
+      // }
 
       const query = { email: email }
       const user = await userCallection.findOne(query);
-      if(user?.role === 'admin'){
-        res.send({admin: true,instructor:false, user:false})
-      }
-      else if(user?.role === 'isntructor'){
-        res.send({admin: false,instructor:true, user:false})
-      }
-      else{
-        res.send({admin: false,instructor:false,user: true})
+      
 
+      if(user?.role === 'student'){
+        res.send({admin: false,instructor:false,user: true})
+      }
+
+      else{
+        res.send('unauthoriz user')
       }
 
     })
@@ -266,9 +345,12 @@ async function run() {
       if(mutchUser){
         res.send({message: 'user already added'})
       }
+      else{
 
-      const result = await userCallection.insertOne(query)
-      res.send (result)
+        const result = await userCallection.insertOne(query)
+        res.send (result)
+      }
+
     })
 
     // user section end 
@@ -288,22 +370,25 @@ async function run() {
       })
     })
 
-    app.post('/payments', verifyjwt, async(req, res)=>{
+    
+    // todo
+    app.post('/payments',  async(req, res)=>{
       const data = req.body 
       const result = await paymentCallection.insertOne(data)
       res.send(result)
 
     })
-    app.get('/payments/:email', verifyjwt, async(req, res)=>{
+    
+    app.get('/payments/:email',  async(req, res)=>{
       const email = req.params.email
-      const decodedEmail = req.decoded.email
+      // const decodedEmail = req.decoded.email
       const query = {
         email: email
       }
-      if(email === decodedEmail){
-        const result = await paymentCallection.find(query).toArray()
-        res.send(result)
-      }
+      // if(email === decodedEmail){
+      // }
+      const result = await paymentCallection.find(query).toArray()
+      res.send(result)
 
     })
 
