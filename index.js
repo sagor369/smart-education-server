@@ -53,16 +53,9 @@ async function run() {
     const paymentCallection = client.db("smartDb").collection("payment");
 
 
-    await client.connect();
+    client.connect();
 
-    // const isAdmin = async(req, res, next)=>{
-    //   const email = req.decoded.email
-    //   const query = {
-    //     email: email
-    //   }
-    //   const result = 
-
-    // }
+  
 
     const isAdmin = async (req, res, next)=>{
       const email = req.params.email
@@ -102,7 +95,7 @@ async function run() {
 app.post('/add-class'  ,  async(req, res)=>{
       // const decodedemail = req.decoded.email
       const data = req.body
-      const {className, description,email ,image, instructorName,price, seats}= data
+      const {className,instructorEmail, description,email ,image, instructorName,price, seats}= data
       // if(decodedemail !== email){
       //   res.status(401).send({message:'unauthoraiz access '})
       // }
@@ -116,6 +109,7 @@ app.post('/add-class'  ,  async(req, res)=>{
           price: price ,
           seats: seats,
           email: email,
+          instrutorEmail: instructorEmail,
           classPosition :'select'
   
         }
@@ -124,12 +118,20 @@ app.post('/add-class'  ,  async(req, res)=>{
       
     })
 
-    app.get('/enroll-student/:name', async(req, res)=>{
-      const name = req.params.name
+    app.get('/enroll-student/:email', async(req, res)=>{
+      const email = req.params.email
       const myClass = {
-        instructorName: name,
+        instrutorEmail: email,
       }
       const result = await addClassCallection.find(myClass).toArray()
+      res.send(result)
+    })
+
+    app.get('/total-enroll-class', async(req, res) =>{
+      const enroll = {
+        classPosition :'enroll'
+      }
+      const result = await addClassCallection.find(enroll).toArray()
       res.send(result)
     })
 
@@ -189,8 +191,9 @@ app.post('/add-class'  ,  async(req, res)=>{
     // all classes start 
 
     app.get('/populer', async(req, res)=>{
+      const findClass = {classType: 'axcept'}
 
-      const result = await classCalection.find().toArray()
+      const result = await classCalection.find(findClass).toArray()
       res.send(result)
     })
 
@@ -229,6 +232,27 @@ app.post('/add-class'  ,  async(req, res)=>{
       res.send(result)
 
     })
+    app.get('/all-class', async(req, res) =>{
+      // const findClass = {classType: 'axcept'}
+      const result = await classCalection.find().toArray()
+      res.send(result)
+
+    })
+    app.patch('/class-axcept', async(req, res) =>{
+      const id = req.body.id 
+      const axcept= req.body.axcept
+      const findId = {_id : new ObjectId(id)}
+      const query= {
+        $set:{
+          classType: axcept
+        }
+      }
+      const result = await classCalection.updateOne(findId, query)
+      res.send(result)
+
+    })
+
+
 
     
 
@@ -238,13 +262,16 @@ app.post('/add-class'  ,  async(req, res)=>{
       const findClass = {_id : new ObjectId(id)}
       const updateClass = await classCalection.findOne(findClass)
       const { className, seats, price} = data
+      const name = className || updateClass.className
+      const seate = seats || updateClass.seats
+      const prices = price || updateClass.price
 
       if(updateClass){
         const query = {
           $set:{
-            className:className,
-            seats: seats,
-            price: price,
+            className:name,
+            seats: seate,
+            price: prices,
             status: 'prossasing'
             
           } 
@@ -306,6 +333,13 @@ app.post('/add-class'  ,  async(req, res)=>{
       res.send(result)
     })
 
+    app.get('/all-user', async(req, res)=>{
+      const result = await userCallection.find().toArray()
+      res.send(result)
+
+    })
+
+
    
     app.get('/user-data/:email',isAdmin ,isInstructor ,  async(req, res)=>{
       const email = req.params.email 
@@ -329,12 +363,16 @@ app.post('/add-class'  ,  async(req, res)=>{
 
     })
 
+    app.get('/user', async(req, res) =>{
+      const email = req.body.email 
+    })
+
 
     app.post('/add-users', async(req, res)=>{
       const data = req.body 
       const {email, name, photo} = data
       const query =  {
-        email, name, photo, role: 'student'
+        email, name, image:photo, role: 'student'
 
       }
       const queryEmail = {
@@ -352,6 +390,20 @@ app.post('/add-class'  ,  async(req, res)=>{
       }
 
     })
+
+    app.patch('/update-user', async(req, res)=>{
+      const id = (req.body.id)
+      const data = req.body.role
+      const find = {_id: new ObjectId(id)}
+      const updateData = {
+        $set:{
+          role: data
+        }
+      }
+       const result  = await userCallection.updateOne(find, updateData )
+       res.send(result)
+       
+      })
 
     // user section end 
 
